@@ -2,7 +2,13 @@ local m =
 {
     opts =
     {
-        folder_name = "nvim-settings"
+        folder_name = "nvim-settings",
+
+        default_settings =
+        {
+            terminal = "ToggleTermExec",
+            cmd = "clear & python3 main.py"
+        }
     }
 }
 
@@ -14,31 +20,25 @@ function m:get_init_path()
     return m.opts.folder_name .. "/init.lua"
 end
 
+function m:get_settings_path()
+    return m.opts.folder_name .. "/settings.lua"
+end
 
 
 m.setup = function(opts)
     m.opts = vim.tbl_deep_extend("force", m.opts, opts or {})
 
-    local init_lua = m.opts.folder_name .. "/init.lua"
 
     -- run the init.lua file
-    local f = io.open(init_lua, "r")
+    local f = io.open(m.get_init_path(), "r")
     if f then
-        dofile(init_lua)
+        dofile(m.get_init_path())
         f:close()
     end
 
-    -- Initialize the settings folder
-    vim.api.nvim_create_user_command("Init", function(args)
-        vim.fn.mkdir(m.opts.folder_name, "p")
-        local f = io.open(init_lua, 'w')
-        if f then
-            f:write(require("neovim-config.init_example_code"))
-            vim.notify("File \"" .. init_lua .. "\" Created!")
-            f:close()
-            dofile(init_lua)
-        end
-    end, { nargs = "*" })
+
+    require("neovim-config.plugin")
+
 
 end -- End of setup
 

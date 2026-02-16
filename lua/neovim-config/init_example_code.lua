@@ -27,5 +27,6 @@ vim.keymap.set({'n', 'v'}, "<C-b>", function()
 end, { desc = "Clear search highlights" })
 -- ==========================================================
 ]]
+s = ""
 
 return s
