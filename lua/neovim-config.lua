@@ -2,35 +2,33 @@ local m =
 {
     opts =
     {
-        key = "<C-b>",
-        file_name = ".neo/init.lua",
+        init_file =
+        {
+            enabled = true,
+            path = ".neo/init.lua",
+        },
+        make =
+        {
+            enabled = true,
+            path = ".neo/make.lua",
+            key = "<C-b>",
+        },
     }
 }
-
 
 m.setup = function(opts)
     m.opts = vim.tbl_deep_extend("force", m.opts, opts or {})
 
     -- run the init.lua file
-    local f = io.open(m.opts.file_name, "r")
-    if f then
-        dofile(m.opts.file_name)
-        f:close()
+    if m.opts.init_file.enabled then
+        if vim.uv.fs_stat(m.opts.init_file.path) then
+            dofile(m.opts.init_file.path)
+        end
     end
 
-
-    vim.api.nvim_create_user_command("Init", function(args)
-        local parent_dir = vim.fn.fnamemodify(m.opts.file_name, ":h")
-        vim.fn.mkdir(parent_dir, "p")  -- automatically creates intermediate dirs
-        local f = io.open(m.opts.file_name, 'w')
-        if f then
-            vim.notify("File \"" .. m.opts.file_name .. "\" Created!")
-            f:close()
-            dofile(m.opts.file_name)
-        end
-    end, { nargs = "*" })
-
-
+    if m.opts.make.enabled then
+        require("neovim-config.make").setup()
+    end
 
 end -- End of setup
 
