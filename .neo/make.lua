@@ -1,3 +1,0 @@
-return {
-    current = "!echo test"
-}
