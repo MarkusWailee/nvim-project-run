@@ -1,0 +1,1 @@
+-- Called when neovim is opened

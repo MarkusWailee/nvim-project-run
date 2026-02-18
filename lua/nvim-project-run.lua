@@ -4,6 +4,8 @@ local m =
     {
         init_file =
         {
+            -- This feature is potentially dangerous.
+            -- TODO rework later
             enabled = true,
             path = ".neo/init.lua",
         },
@@ -18,27 +20,28 @@ local m =
 
 m.setup = function(opts)
     m.opts = vim.tbl_deep_extend("force", m.opts, opts or {})
+    local init_path = m.opts.init_file.path
+    local make_path = m.opts.make.path
 
     -- run the init.lua file
     if m.opts.init_file.enabled then
         if vim.uv.fs_stat(m.opts.init_file.path) then
-            dofile(m.opts.init_file.path)
+                dofile(m.opts.init_file.path)
+            end
         end
     end
 
     if m.opts.make.enabled then
-        require("neovim-config.make").setup()
+        require("nvim-project-run.make").setup()
     end
 
 
     vim.api.nvim_create_user_command("MakeInit", function(args)
-        local make_path = m.opts.make.path
         if m.opts.make.enabled and not vim.uv.fs_stat(make_path) then
             vim.cmd("Make")
         end
 
 
-        local init_path = m.opts.init_file.path
         if m.opts.init_file.enabled and not vim.uv.fs_stat(init_path) then
             vim.fn.mkdir(vim.fs.dirname(init_path), "p")
             local f = io.open(init_path, "w")

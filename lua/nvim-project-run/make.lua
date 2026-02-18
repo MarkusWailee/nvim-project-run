@@ -6,9 +6,9 @@
 ```
 ]]
 local m = {}
-local h = require("neovim-config.file_helpers")
-local make_path = require("neovim-config").opts.make.path
-local key = require("neovim-config").opts.make.key
+local h = require("nvim-project-run.file_helpers")
+local make_path = require("nvim-project-run").opts.make.path
+local key = require("nvim-project-run").opts.make.key
 
 -- returns true if command exists, false otherwise
 
