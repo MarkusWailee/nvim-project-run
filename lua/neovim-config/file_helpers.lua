@@ -7,7 +7,10 @@ local Writable = {}
 # Writes back to the read file
 ]]
 function Writable:write()
-    local f = io.open(getmetatable(self).path, "w")
+    local path = getmetatable(self).path
+    local dir = vim.fs.dirname(path)
+    vim.fn.mkdir(dir, "p")
+    local f = io.open(path, "w")
     if f then
         setmetatable(self, nil)
         f:write("return " ..vim.inspect(self, {indent = "    "}) .."\n")

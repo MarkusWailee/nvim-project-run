@@ -7,14 +7,24 @@
 ]]
 local m = {}
 local h = require("neovim-config.file_helpers")
-local path = require("neovim-config").opts.make.path
+local make_path = require("neovim-config").opts.make.path
+local key = require("neovim-config").opts.make.key
 
 -- returns true if command exists, false otherwise
 
-local selected = "selected"
+local selected = "current"
+
 
 function m.get_table()
-    return h.read(path)
+    return h.read(make_path)
+end
+
+function m.is_empty()
+    return next(setmetatable(m.get_table(), nil)) == nil
+end
+
+function m.get_command(name)
+    return m.get_table()[name]
 end
 
 function m.get_command(name)
@@ -30,11 +40,10 @@ function m.run_command(name)
     return false
 end
 
-function m.run_select_command(name)
+function m.select_command(name)
     local t = m.get_table()
     local cmd = t[name]
     if cmd then
-        vim.cmd(cmd)
         t[selected] = cmd
         t:write()
         return true
@@ -42,14 +51,38 @@ function m.run_select_command(name)
     return false
 end
 
-function m.select_command(name)
-    local t = m.get_table()
-    local cmd = t[name]
-    if cmd then
-        t[selected] = cmd
-        return true
+function m.menu_list(prompt, callback)
+    if m.is_empty() then
+        callback(nil)
+        return
     end
-    return false
+
+    local t = m.get_table()
+    local key_list = {}
+    for name, _ in pairs(t) do
+        table.insert(key_list, name)
+    end
+
+    local result = false
+    table.sort(key_list)
+    vim.ui.select(key_list, {
+        prompt = prompt,
+        format_item = function(item)
+            return item .. " -> \"" .. m.get_command(item) .."\""
+        end,
+    }, function(cmd_name)
+        if cmd_name then
+            callback(cmd_name)
+        end
+    end)
+end
+
+function m.menu_enter(prompt, callback)
+    vim.ui.input({ prompt = prompt }, function(out)
+        if out then
+            callback(out)
+        end
+    end)
 end
 
 function m.create_command(name, command)
@@ -60,8 +93,13 @@ end
 
 function m.remove_command(name)
     local t = m.get_table()
-    t[name] = nil
-    t:write()
+    if t[name] then
+        t[name] = nil
+        t:write()
+        return true
+    end
+    return false
+
 end
 
 
@@ -70,12 +108,22 @@ function m.setup()
         -- 0 Arguments
         if #args.fargs == 0 then
             if not m.run_command(selected) then
-                print("Make command not set")
+                m.menu_list("Choose Commmand", function(name)
+                    if name then
+                        m.select_command(name)
+                    else
+                        m.menu_enter("Set Make command:", function(cmd)
+                            m.create_command(selected, cmd)
+                        end)
+                    end
+                end)
             end
         elseif #args.fargs == 1 then
             local name = args.fargs[1]
-            if not m.run_select_command(name) then
+            if not m.run_command(name) then
                 print("Make command \"" .. name .."\" does not exists")
+            else
+                m.select_command(name)
             end
         end
     end, { nargs = "*" })
@@ -86,9 +134,12 @@ function m.setup()
         if #args.fargs >= 1 then
             local cmd = args.args
             m.create_command(selected, cmd)
-            print("Make command set to \""..cmd.."\"")
+            vim.notify("\rMake set to \""..cmd.."\" ")
         else
-            print("MakeAdd expect atleast 1 arguments")
+            m.menu_enter("Enter command: ", function(cmd)
+                m.create_command(selected, cmd)
+                vim.notify("\rMake set to \""..cmd.."\" ")
+            end)
         end
     end, { nargs = "*" })
 
@@ -98,42 +149,45 @@ function m.setup()
             local name = args.fargs[1]
             local cmd = table.concat(args.fargs, " ", 2)
             m.create_command(name, cmd)
-            print("Make command \""..name.."\" added")
+            vim.notify("Make command \""..name.."\" added")
         else
-            print("MakeAdd expect atleast 2 arguments")
+            m.menu_enter("Enter name and command: ", function(out)
+                local name, cmd = (out):match("^(%S+)%s*(.*)$")
+                m.create_command(name, cmd)
+                vim.notify("\rMake command \""..name.."\" added")
+            end)
         end
     end, { nargs = "*" })
 
 
     vim.api.nvim_create_user_command("MakeRemove", function(args)
         -- 0 Arguments
-        if #args.fargs == 1 then
-            local name = args.fargs[1]
-            m.remove_command(name)
-            print("Make command \""..name.."\" removed")
-        else
-            print("MakeRemove expected 1 argument")
-        end
-    end, { nargs = "*" })
-
-    vim.api.nvim_create_user_command("MakeShow", function(args)
-        -- 0 Arguments
-        local t = m.get_table()
-
-        local result = {}
-        for name, _ in pairs(t) do
-            if name ~= selected then
-                table.insert(result, name)
+        m.menu_list("Remove Command", function(name)
+            if name then
+                m.remove_command(name)
+                vim.notify("Removed " ..name)
+            else
+                vim.notify("Make list is empty.")
             end
-        end
-
-        table.sort(result)
-
-        for i,v in ipairs(result) do
-            print(i .. ". " ..v)
-        end
-
+        end)
     end, { nargs = "*" })
+
+    vim.api.nvim_create_user_command("MakeList", function(args)
+        m.menu_list("Choose Command", function(name)
+            if name then
+                m.select_command(name)
+                vim.notify("Selected " ..name)
+            else
+                vim.notify("Make list is empty. Use :MakeAdd.")
+            end
+        end)
+    end, { nargs = "*" })
+
+    if key then
+        vim.keymap.set({"n"}, key, function()
+            m.run_command(selected)
+        end)
+    end
 
 
 end
