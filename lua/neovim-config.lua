@@ -10,8 +10,8 @@ local m =
         make =
         {
             enabled = true,
-            path = ".neo/settings.lua",
-            key = "<C-b>",
+            path = ".neo/make.lua",
+            key = {{"n", "t", "i"}, "<C-b>"},
         },
     }
 }
@@ -32,6 +32,12 @@ m.setup = function(opts)
 
 
     vim.api.nvim_create_user_command("MakeInit", function(args)
+        local make_path = m.opts.make.path
+        if m.opts.make.enabled and not vim.uv.fs_stat(make_path) then
+            vim.cmd("Make")
+        end
+
+
         local init_path = m.opts.init_file.path
         if m.opts.init_file.enabled and not vim.uv.fs_stat(init_path) then
             vim.fn.mkdir(vim.fs.dirname(init_path), "p")

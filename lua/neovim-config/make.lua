@@ -108,11 +108,11 @@ function m.setup()
         -- 0 Arguments
         if #args.fargs == 0 then
             if not m.run_command(selected) then
-                m.menu_list("Choose Commmand", function(name)
+                m.menu_list("Use :MakeSet or Choose Commmand", function(name)
                     if name then
                         m.select_command(name)
                     else
-                        m.menu_enter("Set Make command:", function(cmd)
+                        m.menu_enter("Set Make command: ", function(cmd)
                             m.create_command(selected, cmd)
                         end)
                     end
@@ -184,7 +184,7 @@ function m.setup()
     end, { nargs = "*" })
 
     if key then
-        vim.keymap.set({"n"}, key, function()
+        vim.keymap.set(key[1], key[2], function()
             m.run_command(selected)
         end)
     end
