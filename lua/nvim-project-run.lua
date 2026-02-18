@@ -26,8 +26,7 @@ m.setup = function(opts)
     -- run the init.lua file
     if m.opts.init_file.enabled then
         if vim.uv.fs_stat(m.opts.init_file.path) then
-                dofile(m.opts.init_file.path)
-            end
+            dofile(m.opts.init_file.path)
         end
     end
 
