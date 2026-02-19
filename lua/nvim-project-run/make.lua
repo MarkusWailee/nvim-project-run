@@ -7,8 +7,8 @@
 ]]
 local m = {}
 local h = require("nvim-project-run.file_helpers")
-local make_path = require("nvim-project-run").opts.make.path
-local key = require("nvim-project-run").opts.make.key
+local make_path = require("nvim-project-run").get_make_path()
+local key = require("nvim-project-run").opts.key
 
 -- returns true if command exists, false otherwise
 
