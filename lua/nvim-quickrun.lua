@@ -3,7 +3,7 @@ local m =
     opts =
     {
         enabled = true,
-        path = ".neo/make.lua",
+        path = ".neo/run.lua",
         key = {{"n", "t", "i"}, "<C-b>"},
     }
 }
@@ -16,7 +16,7 @@ m.setup = function(opts)
     m.opts = vim.tbl_deep_extend("force", m.opts, opts or {})
 
     if m.opts.enabled then
-        require("nvim-project-run.make").setup()
+        require("nvim-quickrun.run").setup()
     end
 
 end -- End of setup
