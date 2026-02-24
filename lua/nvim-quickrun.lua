@@ -8,7 +8,7 @@ local m =
     }
 }
 
-m.get_make_path = function()
+m.get_run_path = function()
     return m.opts.path
 end
 

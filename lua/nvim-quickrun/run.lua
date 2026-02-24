@@ -1,13 +1,13 @@
 --[[
 ```sh
-:Make name
+:Run name
     "Selects and runs the already created command"
-:MakeAdd
+:RunAdd
 ```
 ]]
 local m = {}
 local h = require("nvim-quickrun.file_helpers")
-local make_path = require("nvim-quickrun").get_make_path()
+local run_path = require("nvim-quickrun").get_run_path()
 local key = require("nvim-quickrun").opts.key
 
 -- returns true if command exists, false otherwise
@@ -16,7 +16,7 @@ local selected = "current"
 
 
 function m.get_table()
-    return h.read(make_path)
+    return h.read(run_path)
 end
 
 function m.is_empty()
@@ -104,15 +104,15 @@ end
 
 
 function m.setup()
-    vim.api.nvim_create_user_command("Make", function(args)
+    vim.api.nvim_create_user_command("Run", function(args)
         -- 0 Arguments
         if #args.fargs == 0 then
             if not m.run_command(selected) then
-                m.menu_list("Use :MakeSet or Choose Commmand", function(name)
+                m.menu_list("Use :RunSet or Choose Commmand", function(name)
                     if name then
                         m.select_command(name)
                     else
-                        m.menu_enter("Set Make command: ", function(cmd)
+                        m.menu_enter("Set Run command: ", function(cmd)
                             m.create_command(selected, cmd)
                         end)
                     end
@@ -121,7 +121,7 @@ function m.setup()
         elseif #args.fargs == 1 then
             local name = args.fargs[1]
             if not m.run_command(name) then
-                print("Make command \"" .. name .."\" does not exists")
+                print("Run command \"" .. name .."\" does not exists")
             else
                 m.select_command(name)
             end
@@ -129,56 +129,56 @@ function m.setup()
     end, { nargs = "*" })
 
 
-    vim.api.nvim_create_user_command("MakeSet", function(args)
+    vim.api.nvim_create_user_command("RunSet", function(args)
         -- 0 Arguments
         if #args.fargs >= 1 then
             local cmd = args.args
             m.create_command(selected, cmd)
-            vim.notify("\rMake set to \""..cmd.."\" ")
+            vim.notify("\rRun set to \""..cmd.."\" ")
         else
             m.menu_enter("Enter command: ", function(cmd)
                 m.create_command(selected, cmd)
-                vim.notify("\rMake set to \""..cmd.."\" ")
+                vim.notify("\rRun set to \""..cmd.."\" ")
             end)
         end
     end, { nargs = "*" })
 
-    vim.api.nvim_create_user_command("MakeAdd", function(args)
+    vim.api.nvim_create_user_command("RunAdd", function(args)
         -- 0 Arguments
         if #args.fargs > 1 then
             local name = args.fargs[1]
             local cmd = table.concat(args.fargs, " ", 2)
             m.create_command(name, cmd)
-            vim.notify("Make command \""..name.."\" added")
+            vim.notify("Run command \""..name.."\" added")
         else
             m.menu_enter("Enter name and command: ", function(out)
                 local name, cmd = (out):match("^(%S+)%s*(.*)$")
                 m.create_command(name, cmd)
-                vim.notify("\rMake command \""..name.."\" added")
+                vim.notify("\rRun command \""..name.."\" added")
             end)
         end
     end, { nargs = "*" })
 
 
-    vim.api.nvim_create_user_command("MakeRemove", function(args)
+    vim.api.nvim_create_user_command("RunRemove", function(args)
         -- 0 Arguments
         m.menu_list("Remove Command", function(name)
             if name then
                 m.remove_command(name)
                 vim.notify("Removed " ..name)
             else
-                vim.notify("Make list is empty.")
+                vim.notify("Run list is empty.")
             end
         end)
     end, { nargs = "*" })
 
-    vim.api.nvim_create_user_command("MakeList", function(args)
+    vim.api.nvim_create_user_command("RunList", function(args)
         m.menu_list("Choose Command", function(name)
             if name then
                 m.select_command(name)
                 vim.notify("Selected " ..name)
             else
-                vim.notify("Make list is empty. Use :MakeAdd.")
+                vim.notify("Run list is empty. Use :RunAdd.")
             end
         end)
     end, { nargs = "*" })
